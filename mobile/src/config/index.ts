@@ -2,8 +2,8 @@ import Constants from 'expo-constants';
 
 const ENV = {
   dev: {
-    apiUrl: 'http://localhost:3000',
-    apiTrpcUrl: 'http://localhost:3000/api/trpc',
+    apiUrl: 'http://192.168.1.29:3000', // For web testing, use your local IP for mobile
+    apiTrpcUrl: 'http://192.168.1.29:3000/api/trpc',
   },
   staging: {
     apiUrl: 'https://staging.ulepszenia.com',

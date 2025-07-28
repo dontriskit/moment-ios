@@ -13,6 +13,9 @@ import { ZodError } from "zod";
 
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
+import { verifyToken } from "@/server/auth/jwt";
+import { users } from "@/server/db/schema";
+import { eq } from "drizzle-orm";
 
 /**
  * 1. CONTEXT
@@ -27,7 +30,41 @@ import { db } from "@/server/db";
  * @see https://trpc.io/docs/server/context
  */
 export const createTRPCContext = async (opts: { headers: Headers }) => {
-  const session = await auth();
+  // First try to get session from NextAuth (for web)
+  let session = await auth();
+
+  // If no NextAuth session, check for JWT token (for mobile)
+  if (!session) {
+    const authHeader = opts.headers.get("authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.substring(7);
+      try {
+        const payload = verifyToken(token);
+        // Get user from database
+        const user = await db.query.users.findFirst({
+          where: eq(users.id, payload.userId),
+        });
+        
+        if (user) {
+          // Create a session-like object for mobile users
+          session = {
+            user: {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              image: user.image,
+              role: user.role,
+              onboardingCompleted: user.onboardingCompleted,
+            },
+            expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+          };
+        }
+      } catch (error) {
+        // Invalid token, continue without session
+        console.error("Invalid JWT token:", error);
+      }
+    }
+  }
 
   return {
     db,

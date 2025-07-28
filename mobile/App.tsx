@@ -3,7 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StatusBar } from 'expo-status-bar';
 import { trpc, trpcClient } from './src/api/trpc';
-import BottomTabNavigator from './src/navigation/BottomTabNavigator';
+import { AuthProvider } from './src/contexts/AuthContext';
+import RootNavigator from './src/navigation/RootNavigator';
 import "./global.css";
 
 const queryClient = new QueryClient({
@@ -19,10 +20,12 @@ export default function App() {
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <NavigationContainer>
-          <StatusBar style="dark" />
-          <BottomTabNavigator />
-        </NavigationContainer>
+        <AuthProvider>
+          <NavigationContainer>
+            <StatusBar style="dark" />
+            <RootNavigator />
+          </NavigationContainer>
+        </AuthProvider>
       </QueryClientProvider>
     </trpc.Provider>
   );
